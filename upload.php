@@ -38,6 +38,20 @@ if (isset($_POST['submit'])) {
                         $date           = $line[3];
                         $status         = $line[4];
                     
+                        if (!empty($status)) {
+                            switch($status){
+                                case 'Approved':
+                                    $status = 'A';
+                                    break;
+                                case 'Failed':
+                                    $status = 'R';
+                                    break;
+                                case 'Finished':
+                                    $status = 'D';
+                                    break;
+                            }
+                        }
+
                     // Check whether transaction already exists in the db
                     $prevQuery = "SELECT id FROM transactions WHERE transaction_id = '".$line[0]."'";
                     $prevResult = $db->query($prevQuery);
