@@ -1,6 +1,9 @@
 <?php
+// Load dbconfig file
+include_once 'dbConfig.php';
+
 if (isset($_POST['submit'])) {
-    $file = $_FILES['file'];     # Get all information from input 'file'
+    $file = $_FILES['file'];     // Get all information from input 'file'
     print_r($file);
     $fileName = $file['name'];
     $fileTmp = $file['tmp_name'];
@@ -12,23 +15,69 @@ if (isset($_POST['submit'])) {
     $fileExt = explode('.', $fileName);
     $fileAcExt = strtolower(end($fileExt));
 
-    $allowed = array('csv', 'xml', 'jpg', 'png');
+    $allowed = array('text/x-comma-separated-values', 'text/comma-separated-values', 'application/octet-stream', 
+    'application/vnd.ms-excel', 'application/x-csv', 'text/x-csv', 'text/csv', 'application/csv', 'application/excel', 
+    'application/vnd.msexcel', 'text/plain');
+    $num = 1;
 
-    if (in_array($fileAcExt, $allowed)) {       # Check wheter ext as $allowed or invalid
-        if ($fileError === 0) {                 # Check error for log
+    // Validate whether selected file is a CSV file
+    if (!empty($fileName) && in_array($fileType, $allowed)) {
+        if ($fileError === 0) { // Check error for log
             if ($fileSize < 1000000) {
-                $fileNameNew = $fileBaseName.".".$fileAcExt;        # prevent overwrite
-                $filePath = 'uploads/'.$fileNameNew;
-                move_uploaded_file($fileTmp, $filePath);
-                header("Location: index.php?uploadsuccess");
+                if (is_uploaded_file($fileTmp)) {
+                    // Open uploaded CSV file in read-only
+                    $csvFile = fopen($fileTmp, 'r');
+                    fgetcsv($csvFile);  // Skip the first line
+
+                    // data parsing line by line
+                    while(($line = fgetcsv($csvFile)) !== FALSE){
+                        // Get row data
+                        $transaction_id = $line[0];
+                        $amount         = $line[1];
+                        $currency_code  = $line[2];
+                        $date           = $line[3];
+                        $status         = $line[4];
+                    
+                    // Check whether transaction already exists in the db
+                    $prevQuery = "SELECT id FROM transactions WHERE transaction_id = '".$line[0]."'";
+                    $prevResult = $db->query($prevQuery);
+
+                    if($prevResult->num_rows > 0){
+                        // Update data in the db
+                        $db->query("UPDATE transactions SET amount = '".$amount."', currency_code = '".$currency_code."', date = '".$date."', status = '".$status."'");
+                    }else{
+                        // Insert data in the db
+                        $db->query("INSERT INTO transactions (transaction_id, amount, currency_code, date, status) VALUES ('".$transaction_id."', '".$amount."', '".$currency_code."', '".$date."','".$status."')");
+                    }
+                    
+                    while (file_exists("uploads/" . $fileTmp . "." . $fileAcExt)) { // prevent overwrite
+                        $fileNameTmp = (string) $fileName . $num;
+                        $fileName = $fileName . "." . $fileAcExt;
+                        $num++;
+                    }
+                    // $fileNameNew = $fileBaseName.".".$fileAcExt;        
+                    $filePath = 'uploads/'.$fileName;
+                    move_uploaded_file($fileTmp, $filePath);
+                    }
+                    // Close opened CSV file
+                    fclose($csvFile);
+
+                    $qstring = '?status=succ';
+                }else {
+                    $qstring = '?status=err';
+                    echo "Logging Unknown Format file size";
+                }
             }else {
-                echo "Logging Unknown Format file size";
+                echo "Logging Unknown Format all error";    // logging code
             }
         }else {
-            echo "Logging Unknown Format all error";      #logging code
+            echo "Unknown Format";
         }
     }else {
-        echo "Unknown Format";
+        $qstring = '?status=invalid_file';
     }
 }
+
+// Redirect page
+header("Location: index.php".$qstring);
 ?>
