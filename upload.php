@@ -58,7 +58,7 @@ if (isset($_POST['submit'])) {
 
                     if($prevResult->num_rows > 0){
                         // Update data in the db
-                        $db->query("UPDATE transactions SET amount = '".$amount."', currency_code = '".$currency_code."', date = '".$date."', status = '".$status."'");
+                        $db->query("UPDATE transactions SET amount = '".$amount."', currency_code = '".$currency_code."', date = '".$date."', status = '".$status."' WHERE transaction_id = '".$transaction_id."';");
                     }else{
                         // Insert data in the db
                         $db->query("INSERT INTO transactions (transaction_id, amount, currency_code, date, status) VALUES ('".$transaction_id."', '".$amount."', '".$currency_code."', '".$date."','".$status."')");
