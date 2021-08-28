@@ -4,7 +4,7 @@ include_once 'dbConfig.php';
 
 if (isset($_POST['submit'])) {
     $file = $_FILES['file'];     // Get all information from input 'file'
-    print_r($file);
+    // print_r($file);
     $fileName = $file['name'];
     $fileTmp = $file['tmp_name'];
     $fileSize = $file['size'];

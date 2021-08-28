@@ -26,12 +26,16 @@ if(!empty($_GET['status'])){
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
+    <title>CsvToDb</title>
 </head>
 <body>
 <form action="upload.php" method="POST" enctype="multipart/form-data">
     <input type="file" name="file">
     <button type="submit" name="submit"> UPLOAD </button>
+</form>
+<form action="get.php" method="GET">
+    <button type="getStatus" name="getStatus"> by Status </button>
+    <button type="getCurrency" name="getCurrency"> by Currency </button>
 </form>
 </body>
 </html>
